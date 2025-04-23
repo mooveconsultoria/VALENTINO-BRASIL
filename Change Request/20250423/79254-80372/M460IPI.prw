@@ -43,15 +43,11 @@ If SC5->(MsSeek(xFilial("SC5")+SC9->C9_PEDIDO) .and. C5_ZZTRANS = "S") .and. ;
     SC6->(MsSeek(xFilial("SC6")+SC9->(C9_PEDIDO+C9_ITEM+C9_PRODUTO))) .and. ;
     SF4->(MsSeek(xFilial("SF4")+SC6->C6_TES) .and. F4_IPI = "S")
 
-    If SC5->C5_TIPO <> 'P'
-        ALIQIPI := SB1->B1_IPI
-        BASEIPI := SB0->B0_PRV1/(1+(SB1->B1_IPI/100))*QUANTIDADE
-    EndIf
+    ALIQIPI := SB1->B1_IPI
+    BASEIPI := SB0->B0_PRV1/(1+(SB1->B1_IPI/100))*QUANTIDADE
 EndIf
 
-If SC5->C5_TIPO <> 'P'
-    VALORIPI := BASEIPI * (ALIQIPI/100)
-EndIf
+VALORIPI := BASEIPI * (ALIQIPI/100)
 
 RestArea(aAreaSB0)
 RestArea(aAreaSB1)

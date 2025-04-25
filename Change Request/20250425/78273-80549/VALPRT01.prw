@@ -39,13 +39,10 @@ User Function VALRPT01(lSchedule)
     Local dEmissaoAte := LastDate(Date())
     Local cDtCorte    := SuperGetMV('VA_RPT01DT',,'20241001') // Data de corte para filtro de estoque em transito e terceiro demonstração
     Local cTesDemo    := SuperGetMV('VA_RPT01TE',,"('912','913','914','915')") // TES DE SAIDA DEMONST
-    Local nDiasEmiIn  := SuperGetMV('VA_RPT01DI',,90) // Dias para retroagir a data inicial da emissão
 
     Default lSchedule := .F.
 
-    If lSchedule
-        dEmissaoDe := FirstDate(Date() - nDiasEmiIn)
-    Else
+    If !lSchedule
         aAdd(aPergs, {1, "Filial De"       , Space(Len(cFilAnt))       , "", ".T.", "SM0", ".T.", 80, .F.})
         aAdd(aPergs, {1, "Filial Ate"      , Space(Len(cFilAnt))       , "", ".T.", "SM0", ".T.", 80, .F.})
         aAdd(aPergs, {1, "Armazem De"      , Space(TamSX3('B1_COD')[1]), "", ".T.", "NNR", ".T.", 80, .F.})
@@ -352,8 +349,8 @@ Static Function QueryRegs(cFilialDe, cFilialAte, cArmazemDe, cArmazemAte, cProdu
                 ON
                     SB6.B6_FILIAL = SB2.B2_FILIAL AND
                     SB6.B6_PRODUTO = SB2.B2_COD AND
-                    /*SB6.B6_EMISSAO >= '%Exp:cDtCorte%' AND
-                    SB6.B6_EMISSAO BETWEEN '%Exp:DTOS(dEmissaoDe)%' AND '%Exp:DTOS(dEmissaoAte)%' AND*/
+                    SB6.B6_EMISSAO >= '%Exp:cDtCorte%' AND
+                    SB6.B6_EMISSAO BETWEEN '%Exp:DTOS(dEmissaoDe)%' AND '%Exp:DTOS(dEmissaoAte)%' AND
                     SB6.B6_TES IN %Exp:cTesDemo% AND
                     SB6.B6_PODER3 = 'R' AND %Exp:RetSqlDel("SB6")% 
         WHERE
@@ -566,7 +563,7 @@ Static Function QryEst3(cFilialDe, cFilialAte, cArmazemDe, cArmazemAte, cProduto
     cQry += "INNER JOIN " + RetSqlName("SB2") + " SB2 (NOLOCK) " + CRLF
     cQry += "    ON SB2.B2_FILIAL = SB6.B6_FILIAL " + CRLF
     cQry += "    AND SB2.B2_COD = SB6.B6_PRODUTO " + CRLF
-    cQry += "    AND SB2.B2_LOCAL = SB6.B6_LOCAL " + CRLF
+    cQry += "    AND SB2.B2_LOCAL BETWEEN '" + cArmazemDe + "' AND '" + cArmazemAte + "' " + CRLF
     cQry += "    AND SB2.D_E_L_E_T_ = ' ' " + CRLF
     cQry += "INNER JOIN " + RetSqlName("SB0") + " SB0 (NOLOCK) " + CRLF
     cQry += "    ON SB0.B0_FILIAL = '" + xFilial("SB0") + "' " + CRLF
@@ -574,12 +571,11 @@ Static Function QryEst3(cFilialDe, cFilialAte, cArmazemDe, cArmazemAte, cProduto
     cQry += "    AND SB0.D_E_L_E_T_ = ' ' " + CRLF
     cQry += "WHERE SB6.B6_FILIAL BETWEEN '" + cFilialDe + "'  AND '" + cFilialAte + "' " + CRLF
     cQry += "    AND SB6.B6_PRODUTO BETWEEN '" + cProdutoDe + "' AND '" + cProdutoAte + "' " + CRLF
-    cQry += "    AND SB6.B6_LOCAL BETWEEN '" + cArmazemDe + "' AND '" + cArmazemAte + "' " + CRLF
     cQry += "    AND SB6.B6_PODER3 = 'R' " + CRLF
     cQry += "    AND SB6.B6_SALDO > 0 " + CRLF
     cQry += "    AND SB6.B6_TES IN " + cTesDemo + CRLF
-    /*cQry += "    AND SB6.B6_EMISSAO >= '" + cDtCorte + "' " + CRLF
-    cQry += "    AND SB6.B6_EMISSAO BETWEEN '" + DTOS(dEmissaoDe) + "' AND '" + DTOS(dEmissaoAte) + "' " + CRLF*/
+    cQry += "    AND SB6.B6_EMISSAO >= '" + cDtCorte + "' " + CRLF
+    cQry += "    AND SB6.B6_EMISSAO BETWEEN '" + DTOS(dEmissaoDe) + "' AND '" + DTOS(dEmissaoAte) + "' " + CRLF
     cQry += "    AND SB6.D_E_L_E_T_ = '' " + CRLF
     cQry += "GROUP BY SB6.B6_FILIAL " + CRLF
     cQry += "   ,SB1.B1_COD " + CRLF
